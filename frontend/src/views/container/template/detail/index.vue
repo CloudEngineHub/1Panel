@@ -1,5 +1,5 @@
 <template>
-    <DrawerPro v-model="detailVisible" :header="$t('commons.button.view')" size="large">
+    <DrawerPro v-model="detailVisible" :header="$t('commons.button.view')" :back="handleClose" size="large">
         <CodemirrorPro
             :placeholder="$t('commons.msg.noneData')"
             v-model="detailInfo"
@@ -27,6 +27,10 @@ interface DialogProps {
 const acceptParams = (params: DialogProps): void => {
     detailInfo.value = params.content;
     detailVisible.value = true;
+};
+
+const handleClose = () => {
+    detailVisible.value = false;
 };
 
 defineExpose({

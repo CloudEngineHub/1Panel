@@ -31,7 +31,7 @@
     <OpDialog ref="opRef" @search="getContent" />
 </template>
 <script lang="ts" setup>
-import { onUnmounted, reactive, ref } from 'vue';
+import { onUnmounted, reactive, ref, watch } from 'vue';
 import { OperateSupervisorProcessFile } from '@/api/modules/host-tool';
 import i18n from '@/lang';
 import { TabsPaneContext } from 'element-plus';
@@ -53,6 +53,10 @@ const opRef = ref();
 let timer: NodeJS.Timer | null = null;
 
 const em = defineEmits(['search']);
+
+watch(open, (val) => {
+    if (screenfull.isEnabled && !val && !mobile.value) screenfull.exit();
+});
 
 const getContent = () => {
     loading.value = true;

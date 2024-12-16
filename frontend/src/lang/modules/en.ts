@@ -11,6 +11,7 @@ const message = {
         true: 'true',
         false: 'false',
         example: 'e.g.:',
+        fit2cloud: 'FIT2CLOUD',
         button: {
             prev: 'Previous',
             next: 'Next',
@@ -59,8 +60,8 @@ const message = {
             copy: 'Copy',
             random: 'Random',
             uninstall: 'Uninstall',
-            fullscreen: 'Fullscreen',
-            quitFullscreen: 'Quit Fullscreen',
+            fullscreen: 'WebsiteFullscreen',
+            quitFullscreen: 'Quit WebsiteFullscreen',
             update: 'Edit',
             showAll: 'Show All',
             hideSome: 'Hide Some',
@@ -198,7 +199,7 @@ const message = {
             simpleName: 'Supports non-underscore starting, English, numbers, _, length 3-30',
             simplePassword: 'Supports non-underscore starting, English, numbers, _, length 1-30',
             dbName: 'Supports non-special character starting, including English, Chinese, numbers, .-_, with a length of 1-64',
-            imageName: 'Support English, numbers, :/.-_, length 1-150',
+            imageName: 'Support English, numbers, :@/.-_, length 1-256',
             volumeName: 'Support English, numbers, .-_, length 2-30',
             supervisorName: 'Supports non-special characters starting with English, numbers, - and _, length 1-128',
             complexityPassword:
@@ -589,8 +590,13 @@ const message = {
         commandRule: 'Please enter the correct docker run container creation command!',
         commandHelper: 'This command will be executed on the server to create the container. Do you want to continue?',
         edit: 'Edit container',
-        updateContainerHelper:
-            'Container editing requires rebuilding the container. Any data that has not been persisted will be lost. Do you want to continue?',
+        updateHelper1: 'Detected that this container comes from the app store. Please note the following two points:',
+        updateHelper2:
+            '1. The current modifications will not be synchronized to the installed applications in the app store.',
+        updateHelper3:
+            '2. If you modify the application on the installed page, the currently edited content will become invalid.',
+        updateHelper4:
+            'Editing the container requires rebuilding, and any non-persistent data will be lost. Do you want to continue?',
         containerList: 'Container list',
         operatorHelper: '{0} will be performed on the following container, Do you want to continue?',
         operatorAppHelper:
@@ -658,7 +664,7 @@ const message = {
         containerFromAppHelper:
             'Detected that this container originates from the app store. App operations may cause current edits to be invalidated.',
         containerFromAppHelper1:
-            'Click the `Settings` button in the installed applications list to enter the editing page and modify the container name.',
+            'Click the [Param] button in the installed applications list to enter the editing page and modify the container name.',
         command: 'Command',
         console: 'Console Interaction',
         tty: 'TTY (-t)',
@@ -669,6 +675,8 @@ const message = {
         privileged: 'Privileged',
         privilegedHelper:
             'Allows the container to perform certain privileged operations on the host, which may increase container risks. Use with caution!',
+        editComposeHelper:
+            'Note: The environment variables set will be written to the 1panel.env file by default.\nIf you want to use these parameters in the container, you also need to manually add an env_file reference in the compose file.',
 
         upgradeHelper: 'Repository Name/Image Name: Image Version',
         upgradeWarning2:
@@ -687,8 +695,8 @@ const message = {
         containerExample: '80 or 80-88',
         exposePort: 'Expose port',
         exposeAll: 'Expose all',
-        cmdHelper: "e.g. 'nginx' '-g' 'daemon off;' OR nginx -g daemon off;",
-        entrypointHelper: 'e.g. /bin/sh -c',
+        cmdHelper: 'e.g. nginx -g "daemon off;"',
+        entrypointHelper: 'e.g. docker-entrypoint.sh',
         autoRemove: 'Auto remove',
         cpuQuota: 'NacosCPU',
         memoryLimit: 'Memory',
@@ -746,6 +754,8 @@ const message = {
         urlWarning: 'The URL prefix does not need to include http:// or https://. Please modify.',
 
         network: 'Network',
+        networkHelper:
+            'Deleting the 1panel-network container network will affect the normal use of some applications and runtime environments. Do you want to continue?',
         createNetwork: 'Create',
         networkName: 'Name',
         driver: 'Driver',
@@ -785,12 +795,13 @@ const message = {
         composeHelper:
             'The composition created through 1Panel editor or template will be saved in the {0}/docker/compose directory.',
         deleteFile: 'Delete file',
+        allDelete: 'Permanently Delete',
         deleteComposeHelper:
-            'Delete all files in the {0} directory, including persistent files in this directory. Please proceed with caution!',
-        deleteCompose: '" Delete this composition.',
+            '1. Delete container orchestration records \n2. Delete all container orchestration files, including configuration and persistent files',
         apps: 'Apps',
         local: 'Local',
         createCompose: 'Create',
+        composeDirectory: 'Compose Directory',
         template: 'Template',
         composeTemplate: 'Compose template',
         createComposeTemplate: 'Create',
@@ -798,11 +809,16 @@ const message = {
         content: 'Content',
         contentEmpty: 'Compose content cannot be empty, please enter and try again!',
         containerNumber: 'Container number',
+        containerStatus: 'Container Status',
+        exited: 'Exited',
+        running: 'Running',
         down: 'Down',
         up: 'Up',
         composeDetailHelper:
             'The compose is created external to 1Panel. The start and stop operations are not supported.',
         composeOperatorHelper: '{1} operation will be performed on {0}. Do you want to continue?',
+        composeDownHelper:
+            'This will stop and remove all containers and networks under the {0} compose. Do you want to continue?',
 
         setting: 'Setting',
         goSetting: 'Go to edit',
@@ -1451,6 +1467,7 @@ const message = {
         LOCAL: 'Server Disks',
         OSS: 'Ali OSS',
         S3: 'Amazon S3',
+        mode: 'Mode',
         MINIO: 'MINIO',
         SFTP: 'SFTP',
         WebDAV: 'WebDAV',
@@ -1580,6 +1597,7 @@ const message = {
         allowIPEgs:
             'If multiple ip authorizations exist, newlines need to be displayed. For example, \n172.16.10.111 \n172.16.10.0/24',
         mfa: 'MFA',
+        mfaClose: 'Disabling MFA will reduce the security of the service. Do you want to continue?',
         secret: 'Secret',
         mfaInterval: 'Refresh interval (s)',
         mfaTitleHelper:
@@ -1870,7 +1888,7 @@ const message = {
         gotoInstalled: 'Go to install',
         search: 'Search',
         limitHelper: 'The application has already been installed, does not support repeated installation',
-        deleteHelper: '{0} has been associated with the following resources and cannot be deleted',
+        deleteHelper: '{0} has been associated with the following resources. Please check and try again!',
         checkTitle: 'Prompt',
         website: 'website',
         database: 'database',

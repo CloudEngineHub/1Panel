@@ -729,6 +729,7 @@ func (f FileOp) TarGzCompressPro(withDir bool, src, dst, secret, exclusionRules 
 	exStr := ""
 	excludes := strings.Split(exclusionRules, ";")
 	excludes = append(excludes, "*.sock")
+	excludes = append(excludes, "*.socket")
 	for _, exclude := range excludes {
 		if len(exclude) == 0 {
 			continue

@@ -289,7 +289,7 @@ func (u *SettingService) LoadFromCert() (*dto.SSLInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-	case "import":
+	case "import-paste", "import-local":
 		data, err = loadInfoFromCert()
 		if err != nil {
 			return nil, err

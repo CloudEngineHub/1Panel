@@ -20,7 +20,7 @@ func NewWebsiteJob() *website {
 }
 
 func (w *website) Run() {
-	nyc, _ := time.LoadLocation(common.LoadTimeZone())
+	nyc, _ := time.LoadLocation(common.LoadTimeZoneByCmd())
 	websites, _ := repo.NewIWebsiteRepo().List()
 	global.LOG.Info("Website scheduled task in progress ...")
 	now := time.Now().Add(10 * time.Minute)

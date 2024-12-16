@@ -176,12 +176,12 @@ func (u *DashboardService) LoadCurrentInfo(ioOption string, netOption string) *d
 	currentInfo.Procs = hostInfo.Procs
 
 	currentInfo.CPUTotal, _ = cpu.Counts(true)
-	totalPercent, _ := cpu.Percent(0, false)
+	totalPercent, _ := cpu.Percent(100*time.Millisecond, false)
 	if len(totalPercent) == 1 {
 		currentInfo.CPUUsedPercent = totalPercent[0]
 		currentInfo.CPUUsed = currentInfo.CPUUsedPercent * 0.01 * float64(currentInfo.CPUTotal)
 	}
-	currentInfo.CPUPercent, _ = cpu.Percent(0, true)
+	currentInfo.CPUPercent, _ = cpu.Percent(100*time.Millisecond, true)
 
 	loadInfo, _ := load.Avg()
 	currentInfo.Load1 = loadInfo.Load1
@@ -375,13 +375,13 @@ func loadDiskInfo() []dto.DiskInfo {
 		if strings.HasPrefix(fields[6], "/snap") || len(strings.Split(fields[6], "/")) > 10 {
 			continue
 		}
-		if strings.TrimSpace(fields[1]) == "tmpfs" {
+		if strings.TrimSpace(fields[1]) == "tmpfs" || strings.TrimSpace(fields[1]) == "overlay" {
 			continue
 		}
 		if strings.Contains(fields[2], "K") {
 			continue
 		}
-		if strings.Contains(fields[6], "docker") {
+		if strings.Contains(fields[6], "docker") || strings.Contains(fields[6], "podman") || strings.Contains(fields[6], "containerd") || strings.HasPrefix(fields[6], "/var/lib/containers") {
 			continue
 		}
 		isExclude := false

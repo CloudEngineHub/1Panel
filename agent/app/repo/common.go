@@ -113,11 +113,17 @@ func (c *CommonRepo) WithByCreatedAt(startTime, endTime time.Time) DBOption {
 }
 
 func (c *CommonRepo) WithOrderBy(orderStr string) DBOption {
+	if orderStr == "createdAt" {
+		orderStr = "created_at"
+	}
 	return func(g *gorm.DB) *gorm.DB {
 		return g.Order(orderStr)
 	}
 }
 func (c *CommonRepo) WithOrderRuleBy(orderBy, order string) DBOption {
+	if orderBy == "createdAt" {
+		orderBy = "created_at"
+	}
 	switch order {
 	case constant.OrderDesc:
 		order = "desc"

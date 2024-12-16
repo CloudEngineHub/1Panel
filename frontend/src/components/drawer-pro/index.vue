@@ -47,8 +47,9 @@
 <script lang="ts" setup>
 import { computed, useSlots } from 'vue';
 defineOptions({ name: 'DrawerPro' });
-import screenfull from 'screenfull';
 import i18n from '@/lang';
+import { GlobalStore } from '@/store';
+const globalStore = GlobalStore();
 
 const props = defineProps({
     header: String,
@@ -111,14 +112,13 @@ const handleBack = () => {
 
 const closePage = () => {
     localOpenPage.value = false;
+    globalStore.isFullScreen = false;
 };
 
 function toggleFullscreen() {
-    if (screenfull.isEnabled) {
-        screenfull.toggle();
-    }
+    globalStore.isFullScreen = !globalStore.isFullScreen;
 }
 const loadTooltip = () => {
-    return i18n.global.t('commons.button.' + (screenfull.isFullscreen ? 'quitFullscreen' : 'fullscreen'));
+    return i18n.global.t('commons.button.' + (globalStore.isFullScreen ? 'quitFullscreen' : 'fullscreen'));
 };
 </script>

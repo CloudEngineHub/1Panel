@@ -45,6 +45,11 @@
                     ></CodemirrorPro>
                 </div>
             </el-form-item>
+            <el-form-item :label="$t('container.env')" prop="envStr">
+                <el-input type="textarea" :placeholder="$t('container.tagHelper')" :rows="3" v-model="form.envStr" />
+            </el-form-item>
+            <span class="input-help">{{ $t('container.editComposeHelper') }}</span>
+            <CodemirrorPro v-model="form.envFileContent" :height="45" :minHeight="45" disabled mode="yaml" />
         </el-form>
         <template #footer>
             <span class="dialog-footer">
@@ -88,6 +93,9 @@ const form = reactive({
     path: '',
     file: '',
     template: null as number,
+    env: [],
+    envStr: '',
+    envFileContent: `env_file:\n  - 1panel.env`,
 });
 const rules = reactive({
     name: [Rules.requiredInput, Rules.imageName],
@@ -107,6 +115,8 @@ const acceptParams = (): void => {
     form.path = '';
     form.file = '';
     form.template = null;
+    form.env = [];
+    form.envStr = '';
     loadTemplates();
     loadPath();
 };
@@ -179,6 +189,9 @@ const onSubmit = async (formEl: FormInstance | undefined) => {
         if ((form.from === 'edit' || form.from === 'template') && form.file.length === 0) {
             MsgError(i18n.global.t('container.contentEmpty'));
             return;
+        }
+        if (form.envStr) {
+            form.env = form.envStr.split('\n');
         }
         loading.value = true;
         await testCompose(form)

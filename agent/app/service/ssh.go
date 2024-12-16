@@ -124,6 +124,16 @@ func (u *SSHService) OperateSSH(operation string) error {
 	if operation == "enable" || operation == "disable" {
 		serviceName += ".service"
 	}
+	if operation == "stop" {
+		isSocketActive, _ := systemctl.IsActive(serviceName + ".socket")
+		if isSocketActive {
+			std, err := cmd.Execf("%s systemctl stop %s", sudo, serviceName+".socket")
+			if err != nil {
+				global.LOG.Errorf("handle systemctl stop %s.socket failed, err: %v", serviceName, std)
+			}
+		}
+	}
+
 	stdout, err := cmd.Execf("%s systemctl %s %s", sudo, operation, serviceName)
 	if err != nil {
 		if strings.Contains(stdout, "alias name or linked unit file") {
@@ -308,7 +318,7 @@ func (u *SSHService) LoadLog(req dto.SearchSSHLog) (*dto.SSHLog, error) {
 
 	showCountFrom := (req.Page - 1) * req.PageSize
 	showCountTo := req.Page * req.PageSize
-	nyc, _ := time.LoadLocation(common.LoadTimeZone())
+	nyc, _ := time.LoadLocation(common.LoadTimeZoneByCmd())
 	qqWry, err := qqwry.NewQQwry()
 	if err != nil {
 		global.LOG.Errorf("load qqwry datas failed: %s", err)

@@ -17,7 +17,7 @@
         <el-button type="primary" link @click="toHalo">
             <span class="font-normal">{{ isMasterProductPro ? $t('license.pro') : $t('license.community') }}</span>
         </el-button>
-        <span class="version">{{ version }}</span>
+        <span class="version" @click="copyText(version)">{{ version }}</span>
         <el-badge is-dot style="margin-top: -3px" v-if="version !== 'Waiting' && globalStore.hasNewVersion">
             <el-button type="primary" link @click="onLoadUpgradeInfo">
                 <span class="font-normal">({{ $t('setting.hasNewVersion') }})</span>
@@ -42,6 +42,7 @@ import { getSettingInfo, loadUpgradeInfo } from '@/api/modules/setting';
 import Upgrade from '@/components/system-upgrade/upgrade/index.vue';
 import i18n from '@/lang';
 import { MsgSuccess } from '@/utils/message';
+import { copyText } from '@/utils/util';
 import { onMounted, ref } from 'vue';
 import { GlobalStore } from '@/store';
 

@@ -2,7 +2,7 @@ package dto
 
 type SearchCommandWithPage struct {
 	PageInfo
-	OrderBy string `json:"orderBy" validate:"required,oneof=name command created_at"`
+	OrderBy string `json:"orderBy" validate:"required,oneof=name command createdAt"`
 	Order   string `json:"order" validate:"required,oneof=null ascending descending"`
 	GroupID uint   `json:"groupID"`
 	Type    string `josn:"type" validate:"required,oneof=redis command"`

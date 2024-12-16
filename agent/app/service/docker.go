@@ -4,14 +4,17 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/1Panel-dev/1Panel/agent/app/dto"
 	"github.com/1Panel-dev/1Panel/agent/constant"
+	"github.com/1Panel-dev/1Panel/agent/global"
 	"github.com/1Panel-dev/1Panel/agent/utils/cmd"
 	"github.com/1Panel-dev/1Panel/agent/utils/docker"
+	"github.com/1Panel-dev/1Panel/agent/utils/systemctl"
 	"github.com/pkg/errors"
 )
 
@@ -198,6 +201,9 @@ func (u *DockerService) UpdateConf(req dto.SettingUpdate) error {
 	}
 	if len(daemonMap) == 0 {
 		_ = os.Remove(constant.DaemonJsonPath)
+		if err := restartDocker(); err != nil {
+			return err
+		}
 		return nil
 	}
 	newJson, err := json.MarshalIndent(daemonMap, "", "\t")
@@ -207,10 +213,12 @@ func (u *DockerService) UpdateConf(req dto.SettingUpdate) error {
 	if err := os.WriteFile(constant.DaemonJsonPath, newJson, 0640); err != nil {
 		return err
 	}
+	if err := validateDockerConfig(); err != nil {
+		return err
+	}
 
-	stdout, err := cmd.Exec("systemctl restart docker")
-	if err != nil {
-		return errors.New(string(stdout))
+	if err := restartDocker(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -244,6 +252,7 @@ func (u *DockerService) UpdateLogOption(req dto.LogOption) error {
 	changeLogOption(daemonMap, req.LogMaxFile, req.LogMaxSize)
 	if len(daemonMap) == 0 {
 		_ = os.Remove(constant.DaemonJsonPath)
+		_ = restartDocker()
 		return nil
 	}
 	newJson, err := json.MarshalIndent(daemonMap, "", "\t")
@@ -254,9 +263,12 @@ func (u *DockerService) UpdateLogOption(req dto.LogOption) error {
 		return err
 	}
 
-	stdout, err := cmd.Exec("systemctl restart docker")
-	if err != nil {
-		return errors.New(string(stdout))
+	if err := validateDockerConfig(); err != nil {
+		return err
+	}
+
+	if err := restartDocker(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -284,6 +296,7 @@ func (u *DockerService) UpdateIpv6Option(req dto.Ipv6Option) error {
 	}
 	if len(daemonMap) == 0 {
 		_ = os.Remove(constant.DaemonJsonPath)
+		_ = restartDocker()
 		return nil
 	}
 	newJson, err := json.MarshalIndent(daemonMap, "", "\t")
@@ -294,9 +307,12 @@ func (u *DockerService) UpdateIpv6Option(req dto.Ipv6Option) error {
 		return err
 	}
 
-	stdout, err := cmd.Exec("systemctl restart docker")
-	if err != nil {
-		return errors.New(string(stdout))
+	if err := validateDockerConfig(); err != nil {
+		return err
+	}
+
+	if err := restartDocker(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -304,6 +320,9 @@ func (u *DockerService) UpdateIpv6Option(req dto.Ipv6Option) error {
 func (u *DockerService) UpdateConfByFile(req dto.DaemonJsonUpdateByFile) error {
 	if len(req.File) == 0 {
 		_ = os.Remove(constant.DaemonJsonPath)
+		if err := restartDocker(); err != nil {
+			return err
+		}
 		return nil
 	}
 	err := createIfNotExistDaemonJsonFile()
@@ -319,19 +338,38 @@ func (u *DockerService) UpdateConfByFile(req dto.DaemonJsonUpdateByFile) error {
 	_, _ = write.WriteString(req.File)
 	write.Flush()
 
-	stdout, err := cmd.Exec("systemctl restart docker")
-	if err != nil {
-		return errors.New(string(stdout))
+	if err := validateDockerConfig(); err != nil {
+		return err
+	}
+
+	if err := restartDocker(); err != nil {
+		return err
 	}
 	return nil
 }
 
 func (u *DockerService) OperateDocker(req dto.DockerOperation) error {
 	service := "docker"
-	if req.Operation == "stop" {
-		service = "docker.socket"
+	sudo := cmd.SudoHandleCmd()
+	dockerCmd, err := getDockerRestartCommand()
+	if err != nil {
+		return err
 	}
-	stdout, err := cmd.Execf("systemctl %s %s ", req.Operation, service)
+	if req.Operation == "stop" {
+		isSocketActive, _ := systemctl.IsActive("docker.socket")
+		if isSocketActive {
+			std, err := cmd.Execf("%s systemctl stop docker.socket", sudo)
+			if err != nil {
+				global.LOG.Errorf("handle systemctl stop docker.socket failed, err: %v", std)
+			}
+		}
+	}
+	if req.Operation == "restart" {
+		if err := validateDockerConfig(); err != nil {
+			return err
+		}
+	}
+	stdout, err := cmd.Execf("%s %s %s ", dockerCmd, req.Operation, service)
 	if err != nil {
 		return errors.New(string(stdout))
 	}
@@ -385,4 +423,42 @@ func changeLogOption(daemonMap map[string]interface{}, logMaxFile, logMaxSize st
 			daemonMap["log-opts"] = optsMap
 		}
 	}
+}
+
+func validateDockerConfig() error {
+	if !cmd.Which("dockerd") {
+		return nil
+	}
+	stdout, err := cmd.Exec("dockerd --validate")
+	if strings.Contains(stdout, "unknown flag: --validate") {
+		return nil
+	}
+	if err != nil || (stdout != "" && strings.TrimSpace(stdout) != "configuration OK") {
+		return fmt.Errorf("Docker configuration validation failed, err: %v", stdout)
+	}
+	return nil
+}
+
+func getDockerRestartCommand() (string, error) {
+	stdout, err := cmd.Exec("which docker")
+	if err != nil {
+		return "", fmt.Errorf("failed to find docker: %v", err)
+	}
+	dockerPath := stdout
+	if strings.Contains(dockerPath, "snap") {
+		return "snap", nil
+	}
+	return "systemctl", nil
+}
+
+func restartDocker() error {
+	restartCmd, err := getDockerRestartCommand()
+	if err != nil {
+		return err
+	}
+	stdout, err := cmd.Execf("%s restart docker", restartCmd)
+	if err != nil {
+		return fmt.Errorf("failed to restart Docker: %s", stdout)
+	}
+	return nil
 }

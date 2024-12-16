@@ -62,12 +62,18 @@ func WithByGroupBelong(group string) global.DBOption {
 }
 
 func WithOrderBy(orderStr string) global.DBOption {
+	if orderStr == "createdAt" {
+		orderStr = "created_at"
+	}
 	return func(g *gorm.DB) *gorm.DB {
 		return g.Order(orderStr)
 	}
 }
 
 func WithOrderRuleBy(orderBy, order string) global.DBOption {
+	if orderBy == "createdAt" {
+		orderBy = "created_at"
+	}
 	switch order {
 	case constant.OrderDesc:
 		order = "desc"

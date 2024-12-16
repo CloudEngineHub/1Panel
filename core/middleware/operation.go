@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"path"
+	"reflect"
 	"strings"
 	"time"
 
@@ -92,12 +93,21 @@ func OperationLog() gin.HandlerFunc {
 		}
 		for key, value := range formatMap {
 			if strings.Contains(operationDic.FormatEN, "["+key+"]") {
-				if arrays, ok := value.([]string); ok {
-					operationDic.FormatZH = strings.ReplaceAll(operationDic.FormatZH, "["+key+"]", fmt.Sprintf("[%v]", strings.Join(arrays, ",")))
-					operationDic.FormatEN = strings.ReplaceAll(operationDic.FormatEN, "["+key+"]", fmt.Sprintf("[%v]", strings.Join(arrays, ",")))
-				} else {
+				t := reflect.TypeOf(value)
+				if t.Kind() != reflect.Array && t.Kind() != reflect.Slice {
 					operationDic.FormatZH = strings.ReplaceAll(operationDic.FormatZH, "["+key+"]", fmt.Sprintf("[%v]", value))
 					operationDic.FormatEN = strings.ReplaceAll(operationDic.FormatEN, "["+key+"]", fmt.Sprintf("[%v]", value))
+				} else {
+					val := reflect.ValueOf(value)
+					length := val.Len()
+
+					var elements []string
+					for i := 0; i < length; i++ {
+						element := val.Index(i).Interface().(string)
+						elements = append(elements, element)
+					}
+					operationDic.FormatZH = strings.ReplaceAll(operationDic.FormatZH, "["+key+"]", fmt.Sprintf("[%v]", strings.Join(elements, ",")))
+					operationDic.FormatEN = strings.ReplaceAll(operationDic.FormatEN, "["+key+"]", fmt.Sprintf("[%v]", strings.Join(elements, ",")))
 				}
 			}
 		}

@@ -128,7 +128,8 @@ var (
 )
 
 var (
-	ErrFirewall = "ErrFirewall"
+	ErrFirewallNone = "ErrFirewallNone"
+	ErrFirewallBoth = "ErrFirewallBoth"
 )
 
 var (

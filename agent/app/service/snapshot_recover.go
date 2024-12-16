@@ -306,16 +306,7 @@ func recoverAppData(src string, itemHelper *snapRecoverHelper) error {
 		go func(app model.AppInstall) {
 			defer wg.Done()
 			dockerComposePath := app.GetComposePath()
-			out, err := compose.Down(dockerComposePath)
-			if err != nil {
-				_ = handleErr(app, err, out)
-				return
-			}
-			out, err = compose.Up(dockerComposePath)
-			if err != nil {
-				_ = handleErr(app, err, out)
-				return
-			}
+			_, _ = compose.Up(dockerComposePath)
 			app.Status = constant.Running
 			_ = appInstallRepo.Save(context.Background(), &app)
 		}(appInstalls[i])

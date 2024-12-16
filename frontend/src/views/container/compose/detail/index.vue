@@ -7,7 +7,7 @@
                         <el-tag effect="dark" type="success">{{ composeName }}</el-tag>
                     </div>
                     <div v-if="createdBy === '1Panel'" style="margin-left: 50px">
-                        <el-button link type="primary" @click="onComposeOperate('start')">
+                        <el-button link type="primary" @click="onComposeOperate('up')">
                             {{ $t('container.start') }}
                         </el-button>
                         <el-divider direction="vertical" />
@@ -143,7 +143,6 @@ const dialogContainerLogRef = ref();
 
 const opRef = ref();
 
-const emit = defineEmits<{ (e: 'back'): void }>();
 interface DialogProps {
     createdBy: string;
     name: string;
@@ -177,7 +176,7 @@ const search = async () => {
         page: paginationConfig.currentPage,
         pageSize: paginationConfig.pageSize,
         filters: filterItem,
-        orderBy: 'created_at',
+        orderBy: 'createdAt',
         order: 'null',
     };
     loading.value = true;
@@ -260,15 +259,18 @@ const onOperate = async (op: string) => {
 };
 
 const onComposeOperate = async (operation: string) => {
-    ElMessageBox.confirm(
-        i18n.global.t('container.composeOperatorHelper', [composeName.value, i18n.global.t('container.' + operation)]),
-        i18n.global.t('container.' + operation),
-        {
-            confirmButtonText: i18n.global.t('commons.button.confirm'),
-            cancelButtonText: i18n.global.t('commons.button.cancel'),
-            type: 'info',
-        },
-    ).then(async () => {
+    let mes =
+        operation === 'down'
+            ? i18n.global.t('container.composeDownHelper', [composeName.value])
+            : i18n.global.t('container.composeOperatorHelper', [
+                  composeName.value,
+                  i18n.global.t('container.' + operation),
+              ]);
+    ElMessageBox.confirm(mes, i18n.global.t('container.' + operation), {
+        confirmButtonText: i18n.global.t('commons.button.confirm'),
+        cancelButtonText: i18n.global.t('commons.button.cancel'),
+        type: 'info',
+    }).then(async () => {
         let params = {
             name: composeName.value,
             path: composePath.value,
@@ -280,11 +282,7 @@ const onComposeOperate = async (operation: string) => {
             .then(() => {
                 loading.value = false;
                 MsgSuccess(i18n.global.t('commons.msg.operationSuccess'));
-                if (operation === 'down') {
-                    emit('back');
-                } else {
-                    search();
-                }
+                search();
             })
             .catch(() => {
                 loading.value = false;

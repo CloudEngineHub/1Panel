@@ -56,14 +56,19 @@
 
             <el-divider border-style="dashed" />
             <el-form-item :label="$t('commons.login.password')" v-if="form.from === 'local'" prop="password">
-                <el-input type="password" show-password clearable v-model="form.password">
-                    <template #append>
-                        <CopyButton :content="form.password" />
-                        <el-button @click="random" class="p-ml-5">
-                            {{ $t('commons.button.random') }}
-                        </el-button>
-                    </template>
-                </el-input>
+                 <el-input
+                    style="width: calc(100% - 147px)"
+                    type="password"
+                    show-password
+                    clearable
+                    v-model="form.password"
+                />
+                <el-button-group>
+                    <CopyButton class="copy_button" :content="form.password" />
+                    <el-button @click="random">
+                        {{ $t('commons.button.random') }}
+                    </el-button>
+                </el-button-group>
             </el-form-item>
 
             <div v-if="form.from !== 'local'">
@@ -220,3 +225,14 @@ defineExpose({
     acceptParams,
 });
 </script>
+
+<style lang="scss" scoped>
+.copy_button {
+    border-radius: 0px;
+    border-left-width: 0px;
+}
+:deep(.el-input__wrapper) {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+</style>

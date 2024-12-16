@@ -95,7 +95,7 @@ const paginationConfig = reactive({
     currentPage: 1,
     pageSize: 10,
     total: 0,
-    orderBy: 'created_at',
+    orderBy: 'createdAt',
     order: 'null',
 });
 const searchName = ref();
@@ -121,7 +121,7 @@ const onOpenDialog = async (
     rowData: Partial<Database.DatabaseInfo> = {
         name: '',
         type: 'postgresql',
-        version: '16.x',
+        version: '17.x',
         address: '',
         port: 5432,
         username: '',

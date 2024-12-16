@@ -87,7 +87,7 @@
 </template>
 <script lang="ts" setup>
 import { CheckAppInstalled, InstalledOp } from '@/api/modules/app';
-import { onMounted, reactive, ref, watch } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import Status from '@/components/status/index.vue';
 import { ElMessageBox } from 'element-plus';
 import i18n from '@/lang';
@@ -104,21 +104,6 @@ const props = defineProps({
         default: '',
     },
 });
-
-watch(
-    () => props.appKey,
-    (val) => {
-        key.value = val;
-        onCheck();
-    },
-);
-watch(
-    () => props.appName,
-    (val) => {
-        name.value = val;
-        onCheck();
-    },
-);
 
 let key = ref('');
 let name = ref('');
@@ -145,8 +130,8 @@ const setting = () => {
     em('setting', false);
 };
 
-const onCheck = async () => {
-    await CheckAppInstalled(key.value, name.value)
+const onCheck = async (key: any, name: any) => {
+    await CheckAppInstalled(key, name)
         .then((res) => {
             data.value = res.data;
             em('isExist', res.data);
@@ -192,7 +177,7 @@ const onOperate = async (operation: string) => {
                 .then(() => {
                     em('update:loading', false);
                     MsgSuccess(i18n.global.t('commons.msg.operationSuccess'));
-                    onCheck();
+                    onCheck(key.value, name.value);
                     em('after');
                 })
                 .catch(() => {
@@ -207,6 +192,10 @@ const onOperate = async (operation: string) => {
 onMounted(() => {
     key.value = props.appKey;
     name.value = props.appName;
-    onCheck();
+    onCheck(key.value, name.value);
+});
+
+defineExpose({
+    onCheck,
 });
 </script>

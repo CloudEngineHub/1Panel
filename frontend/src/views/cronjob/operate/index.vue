@@ -742,6 +742,7 @@ const rules = reactive({
     ],
 
     script: [{ validator: verifyScript, trigger: 'blur', required: true }],
+    appID: [Rules.requiredSelect],
     website: [Rules.requiredSelect],
     dbName: [Rules.requiredSelect],
     url: [Rules.requiredInput],

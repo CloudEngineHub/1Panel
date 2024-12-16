@@ -22,7 +22,7 @@ func (ssl *ssl) Run() {
 	sslRepo := repo.NewISSLRepo()
 	sslService := service.NewIWebsiteSSLService()
 	sslList, _ := sslRepo.List()
-	nyc, _ := time.LoadLocation(common.LoadTimeZone())
+	nyc, _ := time.LoadLocation(common.LoadTimeZoneByCmd())
 	global.LOG.Info("The scheduled certificate update task is currently in progress ...")
 	now := time.Now().Add(10 * time.Second)
 	for _, s := range sslList {

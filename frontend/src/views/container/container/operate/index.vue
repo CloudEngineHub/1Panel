@@ -424,6 +424,7 @@
             </template>
         </LayoutContent>
         <Command ref="commandRef" />
+        <Confirm ref="confirmRef" @submit="submit" />
     </div>
 </template>
 
@@ -431,8 +432,9 @@
 import { reactive, ref } from 'vue';
 import { Rules, checkFloatNumberRange, checkNumberRange } from '@/global/form-rules';
 import i18n from '@/lang';
-import { ElForm, ElMessageBox } from 'element-plus';
+import { ElForm } from 'element-plus';
 import Command from '@/views/container/container/command/index.vue';
+import Confirm from '@/views/container/container/operate/confirm.vue';
 import {
     listImage,
     listVolume,
@@ -450,6 +452,7 @@ import router from '@/routers';
 
 const loading = ref(false);
 const isCreate = ref();
+const confirmRef = ref();
 const form = reactive<Container.ContainerHelper>({
     containerID: '',
     name: '',
@@ -507,23 +510,31 @@ const search = async () => {
                 form.autoRemove = res.data.autoRemove;
                 form.restartPolicy = res.data.restartPolicy;
                 form.memory = Number(res.data.memory.toFixed(2));
-                form.cmd = res.data.cmd || [];
                 form.user = res.data.user;
                 form.workingDir = res.data.workingDir;
-                let itemCmd = '';
-                for (const item of form.cmd) {
-                    itemCmd += `'${item}' `;
-                }
-                form.cmdStr = itemCmd ? itemCmd.substring(0, itemCmd.length - 1) : '';
 
-                let itemEntrypoint = '';
-                if (res.data.entrypoint) {
-                    for (const item of res.data.entrypoint) {
-                        itemEntrypoint += `'${item}' `;
+                let itemCmd = '';
+                form.cmd = res.data.cmd || [];
+                for (const item of form.cmd) {
+                    if (item.indexOf(' ') !== -1) {
+                        itemCmd += `"${item.replaceAll('"', '\\"')}" `;
+                    } else {
+                        itemCmd += item + ' ';
                     }
                 }
+                form.cmdStr = itemCmd.trimEnd();
 
-                form.entrypointStr = itemEntrypoint ? itemEntrypoint.substring(0, itemEntrypoint.length - 1) : '';
+                let itemEntrypoint = '';
+                form.entrypoint = res.data.entrypoint || [];
+                for (const item of form.entrypoint) {
+                    if (item.indexOf(' ') !== -1) {
+                        itemEntrypoint += `"${item.replaceAll('"', '\\"')}" `;
+                    } else {
+                        itemEntrypoint += item + ' ';
+                    }
+                }
+                form.entrypointStr = itemEntrypoint.trimEnd();
+
                 form.labels = res.data.labels || [];
                 form.env = res.data.env || [];
                 form.exposedPorts = res.data.exposedPorts || [];
@@ -635,83 +646,61 @@ const onSubmit = async (formEl: FormInstance | undefined) => {
     if (!formEl) return;
     formEl.validate(async (valid) => {
         if (!valid) return;
-        form.cmd = [];
-        if (form.cmdStr) {
-            if (form.cmdStr.indexOf(`'`) !== -1) {
-                let itemCmd = form.cmdStr.split(`'`);
-                for (const cmd of itemCmd) {
-                    if (cmd && cmd !== ' ') {
-                        form.cmd.push(cmd);
-                    }
-                }
-            } else {
-                let itemCmd = form.cmdStr.split(` `);
-                for (const cmd of itemCmd) {
-                    form.cmd.push(cmd);
-                }
-            }
-        }
-        form.entrypoint = [];
-        if (form.entrypointStr) {
-            if (form.entrypointStr.indexOf(`'`) !== -1) {
-                let itemEntrypoint = form.entrypointStr.split(`'`);
-                for (const entry of itemEntrypoint) {
-                    if (entry && entry !== ' ') {
-                        form.entrypoint.push(entry);
-                    }
-                }
-            } else {
-                let itemEntrypoint = form.entrypointStr.split(` `);
-                for (const entry of itemEntrypoint) {
-                    form.entrypoint.push(entry);
-                }
-            }
-        }
-        if (form.publishAllPorts) {
-            form.exposedPorts = [];
-        } else {
-            if (!checkPortValid()) {
-                return;
-            }
-        }
-        form.memory = Number(form.memory);
-        form.nanoCPUs = Number(form.nanoCPUs);
-
-        loading.value = true;
         if (isCreate.value) {
-            await createContainer(form)
-                .then(() => {
-                    loading.value = false;
-                    MsgSuccess(i18n.global.t('commons.msg.operationSuccess'));
-                })
-                .catch(() => {
-                    loading.value = false;
-                });
+            submit();
         } else {
-            ElMessageBox.confirm(
-                i18n.global.t('container.updateContainerHelper'),
-                i18n.global.t('commons.button.edit'),
-                {
-                    confirmButtonText: i18n.global.t('commons.button.confirm'),
-                    cancelButtonText: i18n.global.t('commons.button.cancel'),
-                },
-            )
-                .then(async () => {
-                    await updateContainer(form)
-                        .then(() => {
-                            loading.value = false;
-                            MsgSuccess(i18n.global.t('commons.msg.operationSuccess'));
-                        })
-                        .catch(() => {
-                            updateContainerID();
-                            loading.value = false;
-                        });
-                })
-                .catch(() => {
-                    loading.value = false;
-                });
+            confirmRef.value.acceptParams({ isFromApp: isFromApp(form) });
         }
     });
+};
+const submit = async () => {
+    form.cmd = [];
+    if (form.cmdStr) {
+        let itemCmd = splitWithQuotes(form.cmdStr);
+        for (const item of itemCmd) {
+            form.cmd.push(item.replace(/(?<!\\)"/g, '').replaceAll('\\"', '"'));
+        }
+    }
+    form.entrypoint = [];
+    if (form.entrypointStr) {
+        let itemEntrypoint = splitWithQuotes(form.entrypointStr);
+        for (const item of itemEntrypoint) {
+            form.entrypoint.push(item.replace(/(?<!\\)"/g, '').replaceAll('\\"', '"'));
+        }
+    }
+    if (form.publishAllPorts) {
+        form.exposedPorts = [];
+    } else {
+        if (!checkPortValid()) {
+            return;
+        }
+    }
+    form.memory = Number(form.memory);
+    form.nanoCPUs = Number(form.nanoCPUs);
+
+    loading.value = true;
+    if (isCreate.value) {
+        await createContainer(form)
+            .then(() => {
+                loading.value = false;
+                MsgSuccess(i18n.global.t('commons.msg.operationSuccess'));
+                goBack();
+            })
+            .catch(() => {
+                loading.value = false;
+            });
+    } else {
+        await updateContainer(form)
+            .then(() => {
+                loading.value = false;
+                MsgSuccess(i18n.global.t('commons.msg.operationSuccess'));
+                goBack();
+            })
+            .catch(() => {
+                updateContainerID();
+                loading.value = false;
+            });
+    }
 };
 
 const updateContainerID = async () => {
@@ -721,7 +710,7 @@ const updateContainerID = async () => {
         state: 'all',
         name: form.name,
         filters: '',
-        orderBy: 'created_at',
+        orderBy: 'createdAt',
         order: 'null',
     };
     await searchContainer(params).then((res) => {
@@ -788,6 +777,18 @@ const isFromApp = (rowData: Container.ContainerHelper) => {
     }
     return false;
 };
+
+const splitWithQuotes = (str) => {
+    str = str.replace(/\\"/g, '<quota>');
+    const regex = /(?=(?:[^'"]|['"][^'"]*['"])*$)\s+/g;
+    let parts = str.split(regex).filter(Boolean);
+    let returnList = [];
+    for (const item of parts) {
+        returnList.push(item.replaceAll('<quota>', '\\"'));
+    }
+    return returnList;
+};
+
 onMounted(() => {
     if (router.currentRoute.value.query.containerID) {
         isCreate.value = false;

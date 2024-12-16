@@ -7,7 +7,7 @@ import (
 type SearchClamWithPage struct {
 	PageInfo
 	Info    string `json:"info"`
-	OrderBy string `json:"orderBy" validate:"required,oneof=name status created_at"`
+	OrderBy string `json:"orderBy" validate:"required,oneof=name status createdAt"`
 	Order   string `json:"order" validate:"required,oneof=null ascending descending"`
 }
 

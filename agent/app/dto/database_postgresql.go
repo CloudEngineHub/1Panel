@@ -6,7 +6,7 @@ type PostgresqlDBSearch struct {
 	PageInfo
 	Info     string `json:"info"`
 	Database string `json:"database" validate:"required"`
-	OrderBy  string `json:"orderBy" validate:"required,oneof=name created_at"`
+	OrderBy  string `json:"orderBy" validate:"required,oneof=name createdAt"`
 	Order    string `json:"order" validate:"required,oneof=null ascending descending"`
 }
 

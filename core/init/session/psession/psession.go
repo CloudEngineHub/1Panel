@@ -3,6 +3,10 @@ package psession
 import (
 	"encoding/json"
 	"errors"
+	"log"
+	"os"
+	"time"
+
 	"github.com/1Panel-dev/1Panel/core/constant"
 	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
@@ -11,9 +15,6 @@ import (
 	"github.com/wader/gormstore/v2"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log"
-	"os"
-	"time"
 )
 
 type SessionUser struct {
@@ -99,6 +100,6 @@ func (p *PSession) Delete(c *gin.Context) error {
 }
 
 func (p *PSession) Clean() error {
-	p.db.Debug().Table("sessions").Where("1=1").Delete(nil)
+	p.db.Table("sessions").Where("1=1").Delete(nil)
 	return nil
 }

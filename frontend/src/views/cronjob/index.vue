@@ -61,7 +61,7 @@
                                 icon="VideoPlay"
                                 type="success"
                             >
-                                {{ $t('commons.status.enabled') }}
+                                {{ $t('commons.button.enable') }}
                             </el-button>
                             <el-button
                                 v-else
@@ -70,7 +70,7 @@
                                 type="danger"
                                 @click="onChangeStatus(row.id, 'enable')"
                             >
-                                {{ $t('commons.status.disabled') }}
+                                {{ $t('commons.button.disable') }}
                             </el-button>
                         </template>
                     </el-table-column>
@@ -201,7 +201,7 @@ const paginationConfig = reactive({
     currentPage: 1,
     pageSize: 10,
     total: 0,
-    orderBy: 'created_at',
+    orderBy: 'createdAt',
     order: 'null',
 });
 const searchName = ref();

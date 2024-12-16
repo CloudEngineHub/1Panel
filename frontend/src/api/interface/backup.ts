@@ -19,6 +19,7 @@ export namespace Backup {
         credential: string;
         rememberAuth: boolean;
         backupPath: string;
+        bucketInput: boolean;
         vars: string;
         varsJson: object;
         createdAt: Date;

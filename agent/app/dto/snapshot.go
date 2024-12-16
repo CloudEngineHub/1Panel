@@ -13,6 +13,13 @@ type SnapshotStatus struct {
 	Upload   string `json:"upload"`
 }
 
+type PageSnapshot struct {
+	PageInfo
+	Info    string `json:"info"`
+	OrderBy string `json:"orderBy" validate:"required,oneof=name createdAt"`
+	Order   string `json:"order" validate:"required,oneof=null ascending descending"`
+}
+
 type SnapshotCreate struct {
 	ID                uint   `json:"id"`
 	Name              string `json:"name"`

@@ -96,17 +96,16 @@ const timeOptions = ref([
 ]);
 
 function toggleFullscreen() {
-    if (screenfull.isEnabled) {
-        screenfull.toggle();
-    }
+    globalStore.isFullScreen = !globalStore.isFullScreen;
 }
 
 const loadTooltip = () => {
-    return i18n.global.t('commons.button.' + (screenfull.isFullscreen ? 'quitFullscreen' : 'fullscreen'));
+    return i18n.global.t('commons.button.' + (globalStore.isFullScreen ? 'quitFullscreen' : 'fullscreen'));
 };
 const handleClose = async () => {
     terminalSocket.value?.send('close conn');
     logVisible.value = false;
+    globalStore.isFullScreen = false;
 };
 watch(logVisible, (val) => {
     if (screenfull.isEnabled && !val && !mobile.value) screenfull.exit();
@@ -131,10 +130,8 @@ const searchLogs = async () => {
 };
 
 const onDownload = async () => {
-    let msg =
-        logSearch.tail === 0
-            ? i18n.global.t('container.downLogHelper1', [logSearch.container])
-            : i18n.global.t('container.downLogHelper2', [logSearch.container, logSearch.tail]);
+    logSearch.tail = 0;
+    let msg = i18n.global.t('container.downLogHelper1', [logSearch.container]);
     ElMessageBox.confirm(msg, i18n.global.t('file.download'), {
         confirmButtonText: i18n.global.t('commons.button.confirm'),
         cancelButtonText: i18n.global.t('commons.button.cancel'),

@@ -34,12 +34,23 @@ func RandStrAndNum(n int) string {
 	return (string(b))
 }
 
-func LoadTimeZone() string {
-	loc := time.Now().Location()
-	if _, err := time.LoadLocation(loc.String()); err != nil {
-		return "Asia/Shanghai"
+func LoadTimeZoneByCmd() string {
+	loc := time.Now().Location().String()
+	if _, err := time.LoadLocation(loc); err != nil {
+		loc = "Asia/Shanghai"
 	}
-	return loc.String()
+	std, err := cmd.Exec("timedatectl | grep 'Time zone'")
+	if err != nil {
+		return loc
+	}
+	fields := strings.Fields(string(std))
+	if len(fields) != 5 {
+		return loc
+	}
+	if _, err := time.LoadLocation(fields[2]); err != nil {
+		return loc
+	}
+	return fields[2]
 }
 
 func ScanPort(port int) bool {

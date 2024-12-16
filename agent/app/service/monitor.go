@@ -46,7 +46,7 @@ func NewIMonitorService() IMonitorService {
 }
 
 func (m *MonitorService) LoadMonitorData(req dto.MonitorSearch) ([]dto.MonitorData, error) {
-	loc, _ := time.LoadLocation(common.LoadTimeZone())
+	loc, _ := time.LoadLocation(common.LoadTimeZoneByCmd())
 	req.StartTime = req.StartTime.In(loc)
 	req.EndTime = req.EndTime.In(loc)
 

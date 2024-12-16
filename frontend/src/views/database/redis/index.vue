@@ -17,6 +17,7 @@
                     @before="onBefore"
                     @after="onAfter"
                     @setting="onSetting"
+                    ref="appStatusRef"
                 ></AppStatus>
             </template>
             <template #leftToolBar v-if="!isOnSetting">
@@ -164,6 +165,8 @@ const redisIsExist = ref(false);
 const redisStatus = ref();
 const terminalShow = ref(false);
 
+const appStatusRef = ref();
+
 const commandVisible = ref(false);
 
 const redisCliExist = ref();
@@ -225,6 +228,7 @@ const changeDatabase = async () => {
             currentDB.value = item;
             appKey.value = item.type;
             appName.value = item.database;
+            appStatusRef.value?.onCheck(appKey.value, appName.value);
             reOpenTerminal();
             return;
         }

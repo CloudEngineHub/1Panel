@@ -14,6 +14,7 @@ import (
 	"github.com/1Panel-dev/1Panel/agent/global"
 	"github.com/1Panel-dev/1Panel/agent/utils/common"
 	"github.com/1Panel-dev/1Panel/agent/utils/files"
+	"github.com/pkg/errors"
 )
 
 func (u *CronjobService) handleApp(cronjob model.Cronjob, startTime time.Time) error {
@@ -27,6 +28,9 @@ func (u *CronjobService) handleApp(cronjob model.Cronjob, startTime time.Time) e
 			return err
 		}
 		apps = append(apps, app)
+	}
+	if len(apps) == 0 {
+		return errors.New("no such app in database!")
 	}
 	accountMap, err := NewBackupClientMap(strings.Split(cronjob.SourceAccountIDs, ","))
 	if err != nil {
@@ -61,6 +65,9 @@ func (u *CronjobService) handleApp(cronjob model.Cronjob, startTime time.Time) e
 
 func (u *CronjobService) handleWebsite(cronjob model.Cronjob, startTime time.Time) error {
 	webs := loadWebsForJob(cronjob)
+	if len(webs) == 0 {
+		return errors.New("no such website in database!")
+	}
 	accountMap, err := NewBackupClientMap(strings.Split(cronjob.SourceAccountIDs, ","))
 	if err != nil {
 		return err
@@ -94,6 +101,9 @@ func (u *CronjobService) handleWebsite(cronjob model.Cronjob, startTime time.Tim
 
 func (u *CronjobService) handleDatabase(cronjob model.Cronjob, startTime time.Time) error {
 	dbs := loadDbsForJob(cronjob)
+	if len(dbs) == 0 {
+		return errors.New("no such db in database!")
+	}
 	accountMap, err := NewBackupClientMap(strings.Split(cronjob.SourceAccountIDs, ","))
 	if err != nil {
 		return err

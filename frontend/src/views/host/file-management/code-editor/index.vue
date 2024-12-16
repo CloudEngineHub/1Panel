@@ -17,7 +17,7 @@
                         <el-button
                             @click="toggleFullscreen"
                             v-if="!mobile"
-                            class="!border-none !bg-transparent !text-base !font-semibold !py-2 !px-1"
+                            class="!border-none !bg-transparent !text-base !font-semibold !py-2 !px-1 mr-2.5"
                             icon="FullScreen"
                         ></el-button>
                     </el-tooltip>

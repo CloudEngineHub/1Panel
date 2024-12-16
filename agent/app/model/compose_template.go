@@ -12,4 +12,5 @@ type Compose struct {
 	BaseModel
 
 	Name string `json:"name"`
+	Path string `json:"path"`
 }

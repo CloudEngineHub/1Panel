@@ -308,7 +308,7 @@ let req = reactive({
     name: '',
     page: 1,
     pageSize: 10,
-    orderBy: 'created_at',
+    orderBy: 'createdAt',
     order: 'null',
     websiteGroupId: 0,
 });

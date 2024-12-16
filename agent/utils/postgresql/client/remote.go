@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 	"time"
 
@@ -296,7 +297,11 @@ func loadImageTag() (string, error) {
 		return itemTag, nil
 	}
 
-	itemTag = "postgres:16.1-alpine"
+	sort.Strings(versions)
+	if len(versions) != 0 {
+		itemTag = versions[len(versions)-1]
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 	if _, err := client.ImagePull(ctx, itemTag, image.PullOptions{}); err != nil {

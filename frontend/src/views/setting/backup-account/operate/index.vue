@@ -22,6 +22,17 @@
                 </el-select>
                 <span v-if="isALIYUNYUN()" class="input-help">{{ $t('setting.ALIYUNHelper') }}</span>
             </el-form-item>
+            <el-form-item
+                v-if="dialogData.rowData!.type === 'S3'"
+                :label="$t('setting.mode')"
+                prop="varsJson.mode"
+                :rules="Rules.requiredSelect"
+            >
+                <el-radio-group v-model="dialogData.rowData!.varsJson['mode']">
+                    <el-radio value="virtual hosted">Virtual Hosted</el-radio>
+                    <el-radio value="path">Path</el-radio>
+                </el-radio-group>
+            </el-form-item>
             <el-form-item v-if="hasAccessKey()" label="Access Key ID" prop="accessKey" :rules="Rules.requiredInput">
                 <el-input v-model.trim="dialogData.rowData!.accessKey" />
             </el-form-item>
@@ -136,21 +147,24 @@
             >
                 <el-input v-model.trim="dialogData.rowData!.varsJson['endpointItem']">
                     <template #prepend>
-                        <el-select v-model.trim="domainProto" class="p-w-100">
+                        <el-select v-model.trim="domainProto" class="p-w-120">
                             <el-option label="http" value="http" />
                             <el-option label="https" value="https" />
                         </el-select>
                     </template>
                 </el-input>
             </el-form-item>
-            <el-form-item v-if="hasAccessKey()" label="Bucket" prop="bucket">
-                <el-select @change="errBuckets = false" class="!w-4/5" v-model="dialogData.rowData!.bucket">
-                    <el-option v-for="item in buckets" :key="item" :value="item" />
-                </el-select>
-                <el-button class="!w-1/5" plain @click="getBuckets(formRef)">
-                    {{ $t('setting.loadBucket') }}
-                </el-button>
-                <span v-if="errBuckets" class="input-error">{{ $t('commons.rule.requiredSelect') }}</span>
+            <el-form-item v-if="hasAccessKey()" label="Bucket" :rules="Rules.requiredInput">
+                <el-checkbox v-model="dialogData.rowData!.bucketInput" :label="$t('container.input')" />
+                <el-input clearable v-if="dialogData.rowData!.bucketInput" v-model="dialogData.rowData!.bucket" />
+                <div v-else class="w-full">
+                    <el-select class="!w-4/5" v-model="dialogData.rowData!.bucket">
+                        <el-option v-for="item in buckets" :key="item" :value="item" />
+                    </el-select>
+                    <el-button class="!w-1/5" plain @click="getBuckets()">
+                        {{ $t('setting.loadBucket') }}
+                    </el-button>
+                </div>
             </el-form-item>
             <el-form-item
                 v-if="isUPYUN()"
@@ -379,7 +393,6 @@ const loading = ref(false);
 type FormInstance = InstanceType<typeof ElForm>;
 const formRef = ref<FormInstance>();
 const buckets = ref();
-const errBuckets = ref();
 const oneDriveInfo = ref();
 
 const regionInput = ref();
@@ -532,6 +545,7 @@ const changeType = async () => {
         case 'OSS':
         case 'S3':
             dialogData.value.rowData.varsJson['scType'] = 'Standard';
+            dialogData.value.rowData.varsJson['mode'] = 'virtual hosted';
             break;
         case 'KODO':
             dialogData.value.rowData!.varsJson['timeout'] = 1;
@@ -586,40 +600,32 @@ const handleClose = () => {
     drawerVisible.value = false;
 };
 
-const getBuckets = async (formEl: FormInstance | undefined) => {
-    if (!formEl) return;
-    formEl.validate(async (valid) => {
-        if (!valid) return;
-        loading.value = true;
-        let item = deepCopy(dialogData.value.rowData!.varsJson);
-        if (dialogData.value.rowData!.type === 'KODO') {
-            item['domain'] = spliceHttp(domainProto.value, dialogData.value.rowData!.varsJson['endpointItem']);
-        } else {
-            item['endpoint'] = spliceHttp(domainProto.value, dialogData.value.rowData!.varsJson['endpointItem']);
-        }
-        item['endpointItem'] = undefined;
-        listBucket({
-            type: dialogData.value.rowData!.type,
-            vars: JSON.stringify(item),
-            accessKey: dialogData.value.rowData!.accessKey,
-            credential: dialogData.value.rowData!.credential,
+const getBuckets = async () => {
+    loading.value = true;
+    let item = deepCopy(dialogData.value.rowData!.varsJson);
+    if (dialogData.value.rowData!.type === 'KODO') {
+        item['domain'] = spliceHttp(domainProto.value, dialogData.value.rowData!.varsJson['endpointItem']);
+    } else {
+        item['endpoint'] = spliceHttp(domainProto.value, dialogData.value.rowData!.varsJson['endpointItem']);
+    }
+    item['endpointItem'] = undefined;
+    listBucket({
+        type: dialogData.value.rowData!.type,
+        vars: JSON.stringify(item),
+        accessKey: dialogData.value.rowData!.accessKey,
+        credential: dialogData.value.rowData!.credential,
+    })
+        .then((res) => {
+            loading.value = false;
+            buckets.value = res.data;
         })
-            .then((res) => {
-                loading.value = false;
-                buckets.value = res.data;
-            })
-            .catch(() => {
-                buckets.value = [];
-                loading.value = false;
-            });
-    });
+        .catch(() => {
+            buckets.value = [];
+            loading.value = false;
+        });
 };
 
 const onSubmit = async (formEl: FormInstance | undefined) => {
-    if (hasAccessKey() && !dialogData.value.rowData.bucket) {
-        errBuckets.value = true;
-        return;
-    }
     if (!formEl) return;
     formEl.validate(async (valid) => {
         if (!valid) return;

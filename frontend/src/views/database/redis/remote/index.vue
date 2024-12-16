@@ -94,7 +94,7 @@ const paginationConfig = reactive({
     currentPage: 1,
     pageSize: 10,
     total: 0,
-    orderBy: 'created_at',
+    orderBy: 'createdAt',
     order: 'null',
 });
 const searchName = ref();

@@ -43,7 +43,7 @@ import { ElForm } from 'element-plus';
 import { MsgSuccess } from '@/utils/message';
 import { Host } from '@/api/interface/host';
 import { operateForwardRule } from '@/api/modules/host';
-import { checkCidr, checkIp, checkPort, deepCopy } from '@/utils/util';
+import { checkCidr, checkCidrV6, checkIp, checkPort, deepCopy } from '@/utils/util';
 
 const loading = ref();
 const oldRule = ref<Host.RuleForward>();
@@ -95,8 +95,14 @@ function checkAddress(rule: any, value: string, callback: any) {
     let addrs = value.split(',');
     for (const item of addrs) {
         if (item.indexOf('/') !== -1) {
-            if (checkCidr(item)) {
-                return callback(new Error(i18n.global.t('firewall.addressFormatError')));
+            if (item.indexOf(':') !== -1) {
+                if (checkCidrV6(item)) {
+                    return callback(new Error(i18n.global.t('firewall.addressFormatError')));
+                }
+            } else {
+                if (checkCidr(item)) {
+                    return callback(new Error(i18n.global.t('firewall.addressFormatError')));
+                }
             }
         } else {
             if (checkIp(item)) {

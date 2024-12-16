@@ -101,6 +101,7 @@ onMounted(() => {
     loadStatus();
     loadProductProFromDB();
     loadMasterProductProFromDB();
+    globalStore.isFullScreen = false;
 
     const mqList = window.matchMedia('(prefers-color-scheme: dark)');
     if (mqList.addEventListener) {

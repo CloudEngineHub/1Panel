@@ -7,7 +7,7 @@ import (
 type WebsiteSearch struct {
 	dto.PageInfo
 	Name           string `json:"name"`
-	OrderBy        string `json:"orderBy" validate:"required,oneof=primary_domain type status created_at expire_date"`
+	OrderBy        string `json:"orderBy" validate:"required,oneof=primary_domain type status createdAt expire_date"`
 	Order          string `json:"order" validate:"required,oneof=null ascending descending"`
 	WebsiteGroupID uint   `json:"websiteGroupId"`
 }
